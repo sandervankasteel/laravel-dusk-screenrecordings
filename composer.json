@@ -1,0 +1,29 @@
+{
+    "name": "sandervankasteel/laravel-dusk-screenrecordings",
+    "description": "A package to have screen recordings of Dusk tests",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Sandervankasteel\\LaravelDuskScreenrecordings\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Sander van Kasteel",
+            "email": "info@sandervankasteel.nl"
+        }
+    ],
+    "require": {
+        "php": "~7.4|~8.0",
+        "laravel/dusk": "^6.15",
+        "illuminate/support": "^7.0|^8.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sandervankasteel\\LaravelDuskScreenrecordings\\ServiceProvider"
+            ]
+        }
+    }
+}
