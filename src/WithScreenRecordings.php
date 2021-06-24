@@ -18,37 +18,45 @@ trait WithScreenRecordings
 
     public string $downloadDir = "/tmp/screenrecordings";
 
-    public function browse(Closure $callback): Closure
+    public function browse(Closure $callback)
     {
-        /** @var Browser[] $browsers */
+//        /** @var Browser[] $browsers */
         $browsers = $this->createBrowsersFor($callback);
+        $this->startRecording($browsers);
 
-//        try {
-            parent::browse(function() use ($callback, $browsers) {
-                $this->startRecording($browsers);
+        try {
+            $callback(...$browsers->all());
+        } catch (\Throwable | \Exception $e) {
+            $this->captureFailuresFor($browsers);
+            $this->storeSourceLogsFor($browsers);
 
-                $callback();
+            throw $e;
+        } finally {
+            $this->storeConsoleLogsFor($browsers);
 
-                $this->endRecording($browsers);
-                $this->storeRecording($browsers);
-            });
-/*        } catch (\Throwable | \Exception $e) {
             $this->endRecording($browsers);
             $this->storeRecording($browsers);
 
-            throw $e;
-        }*/
+
+            static::$browsers = $this->closeAllButPrimary($browsers);
+        }
     }
 
-    public function startRecording($browsers)
+
+    /**
+     * @param  \Illuminate\Support\Collection  $browsers
+     */
+    public function startRecording($browsers): void
     {
         dump("Starting recording");
 
-        $browsers->each(static function (Browser $browser, $key) {
+        $browsers->each(static function (Browser $browser) {
             $browser->driver->executeScript("
                 const startRecordingEvent = new Event('StartRecording');
                 document.dispatchEvent(startRecordingEvent);"
             );
+
+            $browser->pause(1000);
         });
 
     }
@@ -57,15 +65,11 @@ trait WithScreenRecordings
     {
         dump("Ending recording");
 
-        $browsers->each(function (Browser $browser, $key) {
+        $browsers->each(function (Browser $browser) {
             $browser->driver->executeScript("
                 const stopRecordingEvent = new Event('StopRecording');
                 document.dispatchEvent(stopRecordingEvent);"
             );
-
-            if($this->shouldStoreRecording()) {
-                $this->storeRecording($browser);
-            }
         });
     }
 
@@ -73,19 +77,24 @@ trait WithScreenRecordings
     {
         dump("Storing recording");
 
+        if(!$this->shouldStoreRecording()) {
+            return;
+        }
+
         $browsers->each(function (Browser $browser, $key) {
-            $browser->driver->execute("
-            const downloadRecordingEvent = new Event('DownloadRecording');
-            document.dispatchEvent(downloadRecordingEvent);
-        ");
+            $browser->driver->executeScript("
+                const downloadRecordingEvent = new Event('DownloadRecording');
+                document.dispatchEvent(downloadRecordingEvent);"
+            );
 
             // Give the browser some time, to handle the file download
-            $browser->pause(500);
+            $browser->pause(10000);
 
             $target_dir = base_path('tests/Browser/Screenrecordings');
             $sourceFile = "$this->downloadDir/test.webm";
+            $name = $this->getCallerName();
 
-            $success = rename($sourceFile, $target_dir + $this->getCallerName() . ".webm");
+            $success = rename($sourceFile, "$target_dir/$name.webm");
 
             dump($success);
         });

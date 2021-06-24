@@ -1,0 +1,8 @@
+const startRecordingEvent = new Event('StartRecording');
+document.dispatchEvent(startRecordingEvent)
+
+const stopRecordingEvent = new Event('StopRecording');
+document.dispatchEvent(stopRecordingEvent);
+
+const downloadRecordingEvent = new Event('DownloadRecording');
+document.dispatchEvent(downloadRecordingEvent);
