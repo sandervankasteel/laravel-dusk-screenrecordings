@@ -1,11 +1,19 @@
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        console.log(sender.tab ?
-            "from a content script:" + sender.tab.url :
-            "from the extension");
-        if (request.greeting === "hello")
-            sendResponse({farewell: "goodbye"});
+
+        chrome.tabs.query({
+            title: 'Screen recording',
+        }).then((tabs) => {
+            if(tabs.length === 0) {
+                chrome.tabs.create({
+                    url: request.domain + '/_screenrecording/bootstrap',
+                    pinned: true
+                });
+
+                chrome.tabs.highlight({tabs: 1});
+            }
+        })
+
+        return true;
     }
 )
-
-// function handle

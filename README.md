@@ -1,1 +1,1 @@
-# laravel-dusk-screenrecordings
+# Laravel Dusk Screenrecordings

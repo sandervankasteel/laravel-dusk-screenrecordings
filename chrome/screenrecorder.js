@@ -1,26 +1,54 @@
 class ScreenRecorder {
-    _stream;
     _recorder;
+    _data = [];
+    _type = 'video/webm';
 
-    constructor() {
-        this._stream = new MediaStream();
-        this._recorder = new MediaRecorder(this._stream, {
-            mimeType: 'video/mp4; codecs="avc1.4d002a"'
+    _src;
+
+    constructor(src) {
+        this._src = src;
+    }
+
+    setUp() {
+        this._recorder = new MediaRecorder(this._src, {
+            mimeType: this._type
         });
+
+        this._recorder.ondataavailable = this._handleDataAvailable.bind(this);
+
+        return true;
     }
 
     start() {
-        console.log('starting recording');
-
         this._recorder.start();
     }
 
     stop() {
-        console.log('stopping recording');
         this._recorder.stop();
+        console.log(this);
     }
 
-    getContent() {
+    _handleDataAvailable(e) {
+        this._data.push(e.data);
+    }
 
+    download() {
+        var blob = new Blob(this._data, {
+            type: "video/webm"
+        });
+        var url = URL.createObjectURL(blob);
+
+        console.log(blob);
+
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+
+        a.style = "display: none";
+        a.href = url;
+        a.download = "test.webm";
+
+        a.click();
+
+        window.URL.revokeObjectURL(url);
     }
 }

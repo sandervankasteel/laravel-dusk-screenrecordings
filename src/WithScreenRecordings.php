@@ -14,15 +14,12 @@ trait WithScreenRecordings
 
     protected string $whichRecording = "failures"; // "failures" or "all"
 
-    public static string $storeRecordingsAt;
-
     public string $downloadDir = "/tmp/screenrecordings";
 
     public function browse(Closure $callback)
     {
-//        /** @var Browser[] $browsers */
+        /** @var Browser[] $browsers */
         $browsers = $this->createBrowsersFor($callback);
-        $this->startRecording($browsers);
 
         try {
             $callback(...$browsers->all());
@@ -42,29 +39,8 @@ trait WithScreenRecordings
         }
     }
 
-
-    /**
-     * @param  \Illuminate\Support\Collection  $browsers
-     */
-    public function startRecording($browsers): void
-    {
-        dump("Starting recording");
-
-        $browsers->each(static function (Browser $browser) {
-            $browser->driver->executeScript("
-                const startRecordingEvent = new Event('StartRecording');
-                document.dispatchEvent(startRecordingEvent);"
-            );
-
-            $browser->pause(1000);
-        });
-
-    }
-
     public function endRecording($browsers)
     {
-        dump("Ending recording");
-
         $browsers->each(function (Browser $browser) {
             $browser->driver->executeScript("
                 const stopRecordingEvent = new Event('StopRecording');
@@ -75,8 +51,6 @@ trait WithScreenRecordings
 
     public function storeRecording($browsers)
     {
-        dump("Storing recording");
-
         if(!$this->shouldStoreRecording()) {
             return;
         }
@@ -88,15 +62,13 @@ trait WithScreenRecordings
             );
 
             // Give the browser some time, to handle the file download
-            $browser->pause(10000);
+            $browser->pause(500);
 
-            $target_dir = base_path('tests/Browser/Screenrecordings');
+            $target_dir = base_path('tests/Browser/screenrecordings');
             $sourceFile = "$this->downloadDir/test.webm";
             $name = $this->getCallerName();
 
-            $success = rename($sourceFile, "$target_dir/$name.webm");
-
-            dump($success);
+            rename($sourceFile, "$target_dir/$name.webm");
         });
     }
 
@@ -105,9 +77,12 @@ trait WithScreenRecordings
         $extensionPath = base_path('vendor/sandervankasteel/laravel-dusk-screenrecordings/chrome');
         
         return [
-            '--auto-select-desktop-capture-source="Entire screen"',
+            '--enable-usermedia-screen-capturing',
+            "--auto-select-desktop-capture-source='Entire Screen'",
+            '--whitelisted-extension-id=cnphpifdbdiampamdipgobliknffgelk',
             "--load-extension=$extensionPath",
-            '--disable-web-security'
+            '--disable-web-security',
+            '--allow-http-screen-capture'
         ];
     }
 
