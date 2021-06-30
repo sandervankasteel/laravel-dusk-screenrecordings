@@ -15,6 +15,10 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->loadViewsFrom(__DIR__ . '/../views', 'screenrecording');
 
+        $this->publishes([
+            __DIR__ . '../config/screenrecording.php' => config_path('screenrecording.php')
+        ]);
+
         if(!$this->app->environment('production')) {
             Route::group([
                 'prefix' => '_screenrecording',
@@ -29,6 +33,8 @@ class ServiceProvider extends BaseServiceProvider
 
     public function register()
     {
-        parent::register();
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/screenrecording.php', 'screenrecording'
+        );
     }
 }

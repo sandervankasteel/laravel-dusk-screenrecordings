@@ -12,27 +12,30 @@ trait WithScreenRecordings
 {
     use ProvidesBrowser;
 
-    protected string $whichRecording = "failures"; // "failures" or "all"
-
-    public string $downloadDir = "/tmp/screenrecordings";
+    public string $downloadDir;
 
     public function browse(Closure $callback)
     {
+        $this->downloadDir = config('screenrecording.download_directory');
+
         /** @var Browser[] $browsers */
         $browsers = $this->createBrowsersFor($callback);
+
+        $failure = false;
 
         try {
             $callback(...$browsers->all());
         } catch (\Throwable | \Exception $e) {
             $this->captureFailuresFor($browsers);
             $this->storeSourceLogsFor($browsers);
+            $failure = true;
 
             throw $e;
         } finally {
             $this->storeConsoleLogsFor($browsers);
 
             $this->endRecording($browsers);
-            $this->storeRecording($browsers);
+            $this->storeRecording($browsers, $failure);
 
 
             static::$browsers = $this->closeAllButPrimary($browsers);
@@ -49,9 +52,9 @@ trait WithScreenRecordings
         });
     }
 
-    public function storeRecording($browsers)
+    public function storeRecording($browsers, $failure = false)
     {
-        if(!$this->shouldStoreRecording()) {
+        if(!$this->shouldStoreRecording($failure)) {
             return;
         }
 
@@ -61,10 +64,11 @@ trait WithScreenRecordings
                 document.dispatchEvent(downloadRecordingEvent);"
             );
 
-            // Give the browser some time, to handle the file download
+            // Give the browser some time, to handle the file downloading process
             $browser->pause(500);
 
-            $target_dir = base_path('tests/Browser/screenrecordings');
+            $target_dir = config('screenrecording.target_directory');
+
             $sourceFile = "$this->downloadDir/test.webm";
             $name = $this->getCallerName();
 
@@ -72,9 +76,15 @@ trait WithScreenRecordings
         });
     }
 
+    /**
+     * Gets the arguments needed for
+     *
+     * @return string[]
+     */
     public function getChromeArgs()
     {
-        $extensionPath = base_path('vendor/sandervankasteel/laravel-dusk-screenrecordings/chrome');
+        $extensionPath = __DIR__ . '/chrome';
+//        $extensionPath = base_path('vendor/sandervankasteel/laravel-dusk-screenrecordings/chrome');
         
         return [
             '--enable-usermedia-screen-capturing',
@@ -93,8 +103,28 @@ trait WithScreenRecordings
         ];
     }
 
-    private function shouldStoreRecording()
+    /**
+     * Determines, based on the configuration and test status (failure or success) if a recording should be stoed
+     *
+     * @param $failure boolean Indicating if the test in question, has failed
+     * @return bool boolean If the recording should be stoe
+     */
+    private function shouldStoreRecording($failure = false)
     {
-        return true;
+        $setting = config('screenrecording.to_store');
+
+        if($setting === 'all') {
+            return true;
+        }
+
+        if($setting === 'failures' && $failure) {
+            return true;
+        }
+
+        if($setting === 'successes' && !$failure) {
+            return true;
+        }
+
+        return false;
     }
 }
