@@ -10,12 +10,8 @@ class ScreenRecorder {
     }
 
     setUp() {
-        this._recorder = new MediaRecorder(this._src, {
-            mimeType: this._type
-        });
-
+        this._recorder = new MediaRecorder(this._src, { mimeType: this._type });
         this._recorder.ondataavailable = this._handleDataAvailable.bind(this);
-
         return true;
     }
 
@@ -25,7 +21,7 @@ class ScreenRecorder {
 
     stop() {
         this._recorder.stop();
-        console.log(this);
+        // console.log(this);
     }
 
     _handleDataAvailable(e) {
@@ -33,12 +29,10 @@ class ScreenRecorder {
     }
 
     download() {
-        var blob = new Blob(this._data, {
-            type: "video/webm"
-        });
+        var blob = new Blob(this._data, { type: "video/webm" });
         var url = URL.createObjectURL(blob);
 
-        console.log(blob);
+        // console.log(blob);
 
         var a = document.createElement("a");
         document.body.appendChild(a);

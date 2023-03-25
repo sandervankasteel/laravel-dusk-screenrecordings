@@ -1,5 +1,5 @@
 {
-    "name": "sandervankasteel/laravel-dusk-screenrecordings",
+    "name": "vstyler96/laravel-dusk-screenrecording",
     "description": "A package to have screen recordings of Dusk tests",
     "type": "library",
     "license": "MIT",
@@ -12,13 +12,15 @@
         {
             "name": "Sander van Kasteel",
             "email": "info@sandervankasteel.nl"
+        },
+        {
+            "name": "Vincent GS",
+            "email": "vstyler96@gmail.com"
         }
     ],
     "require": {
-        "php": "~7.4|~8.0",
-        "laravel/dusk": "^6.15",
-        "illuminate/support": "^7.0|^8.0",
-        "illuminate/view": "^7.0|^8.0"
+        "php": "~8.0|~8.1",
+        "laravel/framework": "^8.83"
     },
     "extra": {
         "laravel": {
@@ -26,5 +28,10 @@
                 "Sandervankasteel\\LaravelDuskScreenrecordings\\ServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "laravel/dusk": "^6.25",
+        "phpunit/phpunit": "^9.6",
+        "orchestra/testbench": "^6.25"
     }
 }
